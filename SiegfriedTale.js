@@ -463,7 +463,7 @@ var player = (function(player) {
 			
 		}
 		if (KEY_STATUS.button_c) {
-			
+			alert("atacou");
 			 player.anim = player.attackAnim;
 		}
 		
@@ -474,23 +474,28 @@ var player = (function(player) {
 		if (player.isFalling || player.isJumping) {
 		  player.dy += player.gravity;
 		}
+		
 		if (player.dx > 0) {
-			
+			//Se andando para direita
 			player.anim = player.walkRightAnim;
-		}else if (player.dx < 0) {
-		 	 player.anim = player.walkLeftAnim;
-		}
+		}else{
+			if (player.dx < 0) {
+				//Se andando para esquerda
+				player.anim = player.walkLeftAnim;
+			}
+		} 
 		
 		// change animation if falling
 		if (player.dy > 0) {
 		  player.anim = player.fallAnim;
-		}
-		// change animation is jumping
-		else if (player.dy < 0) {
-		  player.anim = player.jumpAnim;
-		}
-		else {
-		  player.anim = player.stayAnim;
+		}else{
+			if (player.dy < 0) {
+			// change animation is jumping
+				player.anim = player.jumpAnim;
+			}else {
+			  //Se parado
+			  player.anim = player.stayAnim;
+			}
 		}
 		this.advance();
 
