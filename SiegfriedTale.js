@@ -268,15 +268,30 @@ var background = (function() {
   /**
    * Draw the backgrounds to the screen at different speeds
    */
+  this.moveBG = function(){
+	sky.x -= sky.speed;
+    backdrop.x -= backdrop.speed;
+    backdrop2.x -= backdrop2.speed;
+
+  } 
+  this.menosMoveBG = function(){
+	sky.x += sky.speed;
+    backdrop.x += backdrop.speed;
+    backdrop2.x += backdrop2.speed;
+
+  } 
+  
   this.draw = function() {
     ctx.drawImage(assetLoader.imgs.bg, 0, 0);
 
     // Pan background
-    sky.x -= sky.speed;
-    backdrop.x -= backdrop.speed;
-    backdrop2.x -= backdrop2.speed;
-
-    // draw images side by side to loop
+    //sky.x -= sky.speed;
+    //backdrop.x -= backdrop.speed;
+    //backdrop2.x -= backdrop2.speed;
+	
+	//moveBG();
+    
+	// draw images side by side to loop
     ctx.drawImage(assetLoader.imgs.sky, sky.x, sky.y);
     ctx.drawImage(assetLoader.imgs.sky, sky.x + canvas.width, sky.y);
 
@@ -377,30 +392,41 @@ Vector.prototype.minDist = function(vec) {
  */
 var player = (function(player) {
 	// add properties directly to the player imported object
-	player.width     = 60;
-	player.height    = 70;
+	player.width     = 100;
+	player.height    = 100;
 	player.speed     = 6;
 
 	// jumping
 	player.gravity   = 1;
+	player.dx        = 0;
 	player.dy        = 0;
 	player.jumpDy    = -10;
 	player.isFalling = false;
 	player.isJumping = false;
 
 	// spritesheets
-	player.sheet     = new SpriteSheet('imgs/normal_walk2.png', player.width, player.height);
+	player.sheet     = new SpriteSheet('imgs/sigurd.png', player.width, player.height);
 	/*
 	player.walkAnim  = new Animation(player.sheet, 4, 0, 15);
 	player.jumpAnim  = new Animation(player.sheet, 4, 15, 15);
 	player.fallAnim  = new Animation(player.sheet, 4, 11, 11);
 	*/ 
-	player.walkAnim  = new Animation(player.sheet, 4, 0, 7);
-	player.jumpAnim  = new Animation(player.sheet, 4, 8, 8);
-	player.fallAnim  = new Animation(player.sheet, 4, 9, 9); 
-	player.anim      = player.walkAnim;
+	
+	player.stayAnim  = new Animation(player.sheet, 4, 0, 0); 
+	player.walkLeftAnim  = new Animation(player.sheet, 4, 16, 23); 
+	player.walkRightAnim  = new Animation(player.sheet, 4, 8, 15);
+	
+	player.jumpAnim  = new Animation(player.sheet, 4, 26, 26);
+	player.fallAnim  = new Animation(player.sheet, 4, 24, 24); 
+	
+	player.attackAnim  = new Animation(player.sheet, 4, 40, 47); 
+	
 
+	
+	//player.anim      = player.stayAnim;
+	
 	Vector.call(player, 0, 0, 0, player.dy);
+	
 
 	var jumpCounter = 0;  // how long the jump button can be pressed down
 
@@ -409,41 +435,67 @@ var player = (function(player) {
 	*/
 	player.update = function() {
 
-	// jump if not currently jumping or falling
-	if (KEY_STATUS.space && player.dy === 0 && !player.isJumping) {
-		player.isJumping = true;
-		player.dy = player.jumpDy;
-		jumpCounter = 12;
-		assetLoader.sounds.jump.play();
-	}
+		// jump if not currently jumping or falling
+		if (KEY_STATUS.space && player.dy === 0 && !player.isJumping) {
+			player.isJumping = true;
+			player.dy = player.jumpDy;
+			jumpCounter = 12;
+			assetLoader.sounds.jump.play();
+		}
 
-	// jump higher if the space bar is continually pressed
-	if (KEY_STATUS.space && jumpCounter) {
-	  player.dy = player.jumpDy;
-	}
+		// jump higher if the space bar is continually pressed
+		if (KEY_STATUS.space && jumpCounter) {
+		  player.dy = player.jumpDy;
+		}
 
-	jumpCounter = Math.max(jumpCounter-1, 0);
+		jumpCounter = Math.max(jumpCounter-1, 0);
+		
+		if (KEY_STATUS.right && player.dx == 0 ) {
+			player.dx += player.speed;
+			player.anim = player.walkRightAnim;
+			moveBG();
+		
+		}
+		if (KEY_STATUS.left && player.dx == 0 ) {
+			player.dx -= player.speed;
+			player.anim = player.walkLeftAnim;
+			menosMoveBG();
+			
+		}
+		if (KEY_STATUS.button_c) {
+			
+			 player.anim = player.attackAnim;
+		}
+		
 
-	this.advance();
+		
 
-	// add gravity
-	if (player.isFalling || player.isJumping) {
-	  player.dy += player.gravity;
-	}
+		// move direita e esquerda
+		if (player.isFalling || player.isJumping) {
+		  player.dy += player.gravity;
+		}
+		if (player.dx > 0) {
+			
+			player.anim = player.walkRightAnim;
+		}else if (player.dx < 0) {
+		 	 player.anim = player.walkLeftAnim;
+		}
+		
+		// change animation if falling
+		if (player.dy > 0) {
+		  player.anim = player.fallAnim;
+		}
+		// change animation is jumping
+		else if (player.dy < 0) {
+		  player.anim = player.jumpAnim;
+		}
+		else {
+		  player.anim = player.stayAnim;
+		}
+		this.advance();
 
-	// change animation if falling
-	if (player.dy > 0) {
-	  player.anim = player.fallAnim;
-	}
-	// change animation is jumping
-	else if (player.dy < 0) {
-	  player.anim = player.jumpAnim;
-	}
-	else {
-	  player.anim = player.walkAnim;
-	}
-
-	player.anim.update();
+		player.anim.update();
+		player.dx = 0;
 	};
 
 	/**
@@ -482,7 +534,7 @@ function Sprite(x, y, type) {
    * Update the Sprite's position by the player's speed
    */
   this.update = function() {
-    this.dx = -player.speed;
+    this.dx = 0;
     this.advance();
   };
 
@@ -491,7 +543,7 @@ function Sprite(x, y, type) {
    */
   this.draw = function() {
     ctx.save();
-    ctx.translate(0.5,0.5);
+    ctx.translate(0,0);
     ctx.drawImage(assetLoader.imgs[this.type], this.x, this.y);
     ctx.restore();
   };
@@ -755,7 +807,17 @@ function animate() {
  * Keep track of the spacebar events
  */
 var KEY_CODES = {
-  32: 'space'
+  // Códigos de teclas - aqui vão todos os que forem necessários
+
+  32: 'space',
+  37: 'left',
+  39: 'right',
+  38: 'up',
+  40: 'down',
+  90: 'button_z',
+  88: 'button_x',
+  67: 'button_c'
+
 };
 var KEY_STATUS = {};
 for (var code in KEY_CODES) {
