@@ -9,7 +9,9 @@ var ground = [], water = [], enemies = [], environment = [];
 var platformHeight, platformLength, gapLength;
 var platformWidth = 32;
 var platformBase = canvas.height - platformWidth;  // bottom row of the game
-var platformSpacer = 64;
+var platformSpacer = 0;
+var movimentarDireita = false;
+var movimentarEsquerda = false;
 
 var canUseLocalStorage = 'localStorage' in window && window.localStorage !== null;
 var playSound;
@@ -438,6 +440,9 @@ var player = (function(player) {
 	* Update the player's position and animation
 	*/
 	player.update = function() {
+		movimentarDireita = false;
+		movimentarEsquerda = false;
+		
 
 		// jump if not currently jumping or falling
 		if (KEY_STATUS.space && player.dy === 0 && !player.isJumping) {
@@ -458,6 +463,7 @@ var player = (function(player) {
 			player.dx += player.speed;
 			player.anim = player.walkRightAnim;
 			direita = true;
+			movimentarDireita = true;
 			//updateMove(player.speed);
 			moveBG();
 		
@@ -465,6 +471,7 @@ var player = (function(player) {
 		if (KEY_STATUS.left && player.dx == 0 ) {
 			player.dx -= player.speed;
 			player.anim = player.walkLeftAnim;
+			movimentarEsquerda = true;
 			esquerda = true;
 			menosMoveBG();
 			
@@ -557,6 +564,14 @@ function Sprite(x, y, type) {
    */
   this.update = function() {
     this.dx = 0;
+	
+	if(movimentarDireita == true){
+		this.dx = -player.speed;
+	}
+	if(movimentarEsquerda == true){
+	
+		this.dx = player.speed;
+	}
     this.advance();
   };
  
@@ -803,7 +818,6 @@ function animate() {
 
     // increase player speed only when player is jumping
     if (ticker > (Math.floor(platformWidth / player.speed) * player.speed * 20) && player.dy !== 0) {
-      player.speed = bound(++player.speed, 0, 15);
       player.walkAnim.frameSpeed = Math.floor(platformWidth / player.speed) - 1;
 
       // reset ticker
