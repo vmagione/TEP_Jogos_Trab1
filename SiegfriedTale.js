@@ -397,6 +397,7 @@ var player = (function(player) {
 	player.width     = 100;
 	player.height    = 100;
 	player.speed     = 6;
+	player.direcao   = 1; // 0 = Esquerda, 1 = Direita 
 	
 	//moving
 	direita = false;
@@ -412,24 +413,30 @@ var player = (function(player) {
 
 	// spritesheets
 	player.sheet     = new SpriteSheet('imgs/sigurd.png', player.width, player.height);
-	/*
-	player.walkAnim  = new Animation(player.sheet, 4, 0, 15);
-	player.jumpAnim  = new Animation(player.sheet, 4, 15, 15);
-	player.fallAnim  = new Animation(player.sheet, 4, 11, 11);
-	*/ 
 	
-	player.stayAnim  = new Animation(player.sheet, 4, 0, 0); 
+	//Sprite Estado Parado
+	player.stayLeftAnim  = new Animation(player.sheet, 4, 1, 1); 
+	player.stayRightAnim  = new Animation(player.sheet, 4, 0, 0); 
+	//Sprite Estado Andando/correndo
 	player.walkLeftAnim  = new Animation(player.sheet, 4, 16, 23); 
 	player.walkRightAnim  = new Animation(player.sheet, 4, 8, 15);
+	//Sprite Estado Pulando
+	player.jumpLeftAnim  = new Animation(player.sheet, 4, 34, 34);
+	player.jumpRightAnim  = new Animation(player.sheet, 4, 26, 26);
+	//Sprite Estado Caindo
+	player.fallLeftAnim  = new Animation(player.sheet, 4, 35, 35); 
+	player.fallRightAnim  = new Animation(player.sheet, 4, 27, 27); 
+	//Sprite Estado Atacando
+	player.attackRightAnim  = new Animation(player.sheet, 4, 40, 47); 
+	player.attackLeftAnim  = new Animation(player.sheet, 4, 40, 47); 
 	
-	player.jumpAnim  = new Animation(player.sheet, 4, 26, 26);
-	player.fallAnim  = new Animation(player.sheet, 4, 24, 24); 
+	if(player.direcao == 0){
+		player.anim      = player.stayLeftAnim;
 	
-	player.attackAnim  = new Animation(player.sheet, 4, 40, 47); 
-	
-
-	
-	player.anim      = player.stayAnim;
+	}else if(player.direcao == 1){
+		player.anim      = player.stayRightAnim;
+	}
+	player.anim      = player.stayRightAnim;
 	
 	Vector.call(player, 0, 0, 0, player.dy);
 	Vector.call(player, 0, 0, 0, player.dx);
@@ -464,6 +471,7 @@ var player = (function(player) {
 			player.anim = player.walkRightAnim;
 			direita = true;
 			movimentarDireita = true;
+			player.direcao = 1;
 			//updateMove(player.speed);
 			moveBG();
 		
@@ -471,14 +479,15 @@ var player = (function(player) {
 		if (KEY_STATUS.left && player.dx == 0 ) {
 			player.dx -= player.speed;
 			player.anim = player.walkLeftAnim;
-			movimentarEsquerda = true;
 			esquerda = true;
+			movimentarEsquerda = true;
+			player.direcao = 0;
 			menosMoveBG();
 			
 		}
 		if (KEY_STATUS.button_c) {
-			alert("atacou");
-			 player.anim = player.attackAnim;
+			//alert("atacou");
+			 //player.anim = player.attackRightAnim;
 		}
 		
 
@@ -493,18 +502,25 @@ var player = (function(player) {
 		
 		// change animation if falling
 		if (player.dy > 0) {
-		  player.anim = player.fallAnim;
+			if(player.direcao == 0){
+				player.anim = player.fallLeftAnim;
+			}else if (player.direcao == 1){
+				player.anim = player.fallRightAnim;
+			}
 		}else{
 			if (player.dy < 0) {
 			// change animation is jumping
-				player.anim = player.jumpAnim;
+				if(player.direcao == 0){
+					player.anim = player.jumpLeftAnim;
+				}else if (player.direcao == 1){
+					player.anim = player.jumpRightAnim;
+				}
+				
 			}else {
 				//Se não caindo
 				if (player.dx > 0) {
 					//Se andando para direita
 					player.anim = player.walkRightAnim;
-					
-					//player.anim.updateMove();
 					
 				}else{
 					if (player.dx < 0) {
@@ -512,7 +528,12 @@ var player = (function(player) {
 						player.anim = player.walkLeftAnim;
 						
 					}else{
-						 player.anim = player.stayAnim;
+						 if(player.direcao == 0){
+							player.anim = player.stayLeftAnim;
+						 }else if (player.direcao == 1){
+							player.anim = player.stayRightAnim;
+						 }
+
 					}
 				} 
 				
@@ -566,11 +587,11 @@ function Sprite(x, y, type) {
     this.dx = 0;
 	
 	if(movimentarDireita == true){
-		this.dx = -player.speed;
+		this.dx += -player.speed;
 	}
 	if(movimentarEsquerda == true){
 	
-		this.dx = player.speed;
+		this.dx += player.speed;
 	}
     this.advance();
   };
