@@ -395,6 +395,10 @@ var player = (function(player) {
 	player.width     = 100;
 	player.height    = 100;
 	player.speed     = 6;
+	
+	//moving
+	direita = false;
+	esquerda = false;
 
 	// jumping
 	player.gravity   = 1;
@@ -423,10 +427,10 @@ var player = (function(player) {
 	
 
 	
-	//player.anim      = player.stayAnim;
+	player.anim      = player.stayAnim;
 	
 	Vector.call(player, 0, 0, 0, player.dy);
-	
+	Vector.call(player, 0, 0, 0, player.dx);
 
 	var jumpCounter = 0;  // how long the jump button can be pressed down
 
@@ -453,12 +457,15 @@ var player = (function(player) {
 		if (KEY_STATUS.right && player.dx == 0 ) {
 			player.dx += player.speed;
 			player.anim = player.walkRightAnim;
+			direita = true;
+			//updateMove(player.speed);
 			moveBG();
 		
 		}
 		if (KEY_STATUS.left && player.dx == 0 ) {
 			player.dx -= player.speed;
 			player.anim = player.walkLeftAnim;
+			esquerda = true;
 			menosMoveBG();
 			
 		}
@@ -475,15 +482,7 @@ var player = (function(player) {
 		  player.dy += player.gravity;
 		}
 		
-		if (player.dx > 0) {
-			//Se andando para direita
-			player.anim = player.walkRightAnim;
-		}else{
-			if (player.dx < 0) {
-				//Se andando para esquerda
-				player.anim = player.walkLeftAnim;
-			}
-		} 
+		
 		
 		// change animation if falling
 		if (player.dy > 0) {
@@ -493,8 +492,25 @@ var player = (function(player) {
 			// change animation is jumping
 				player.anim = player.jumpAnim;
 			}else {
+				//Se não caindo
+				if (player.dx > 0) {
+					//Se andando para direita
+					player.anim = player.walkRightAnim;
+					
+					//player.anim.updateMove();
+					
+				}else{
+					if (player.dx < 0) {
+						//Se andando para esquerda
+						player.anim = player.walkLeftAnim;
+						
+					}else{
+						 player.anim = player.stayAnim;
+					}
+				} 
+				
 			  //Se parado
-			  player.anim = player.stayAnim;
+			 
 			}
 		}
 		this.advance();
@@ -506,6 +522,7 @@ var player = (function(player) {
 	/**
 	* Draw the player at it's current position
 	*/
+	player.anim.update();
 	player.draw = function() {
 	player.anim.draw(player.x, player.y);
 	};
@@ -542,7 +559,7 @@ function Sprite(x, y, type) {
     this.dx = 0;
     this.advance();
   };
-
+ 
   /**
    * Draw the sprite at it's current position
    */
